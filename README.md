@@ -90,9 +90,7 @@ Utilisateur                                         Coffre-Fort / Serveur
 # Processus d'Utilisation du Coffre-Fort Numérique
 
 ```mermaid
-# Processus d'Utilisation du Coffre-Fort Numérique
-
-```mermaid
+# Processus d'Utilisation du Coffre-Fort Numériquex
 flowchart TD
 
     %% Enrôlement
