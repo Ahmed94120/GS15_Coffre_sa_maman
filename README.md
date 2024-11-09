@@ -48,7 +48,7 @@ python src/main.py
 ```
 
 
-```Markdown
+```plaintext
 Utilisateur                                         Coffre-Fort / Serveur
    │                                                        │
    │                       **1. Enrôlement**                │
