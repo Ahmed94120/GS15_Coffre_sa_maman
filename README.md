@@ -1,4 +1,4 @@
-# GS15_Coffre_sa_maman
+# GS15_Coffre_sa_maman A24
 
 Ce projet implémente un coffre-fort numérique en Python pour le stockage sécurisé de données sensibles. Il est développé dans le cadre du cours GS15 en cryptologie, avec des exigences strictes en matière de sécurité.
 
@@ -34,19 +34,9 @@ Contient l’ensemble des modules Python pour le coffre-fort.
 - **storage** : Fonctions pour chiffrer et déchiffrer les fichiers stockés.
 - **utils** : Fonctions utilitaires (e.g., hashing, I/O).
 
-### `docs`
-Dossier de documentation, incluant le rapport du projet et les diagrammes d'architecture.
+### Processus d'Utilisation
 
-## Exécution
-
-1. Cloner le dépôt.
-2. Installer les dépendances générales via pip (numpy, bitarray, etc.).
-3. Lancer `main.py` dans `src`.
-
-```bash
-python src/main.py
-```
-
+Le processus complet de l'utilisation du coffre-fort comprend plusieurs étapes pour garantir la sécurité et la confidentialité des données. Voici un schéma du flux d’utilisation :
 
 ```plaintext
 Utilisateur                                         Coffre-Fort / Serveur
@@ -96,14 +86,3 @@ Utilisateur                                         Coffre-Fort / Serveur
    │  - Les fichiers sont chiffrés pour stockage avec       │
    │    la clé privée de l'utilisateur (chiffrement RSA)    │
    │<───────────────────────────────────────────────────────│
-
-
-
-```
-
-
-
-
-
-
-
