@@ -86,3 +86,43 @@ Utilisateur                                         Coffre-Fort / Serveur
    │  - Les fichiers sont chiffrés pour stockage avec       │
    │    la clé privée de l'utilisateur (chiffrement RSA)    │
    │<───────────────────────────────────────────────────────│
+```
+```mermaid
+flowchart TD
+
+    %% Enrôlement
+    A[Début] --> B[Enrôlement]
+    B --> C1[Création d'un compte - Fonction: create_account(username)]
+    C1 --> C2[Génération d'un répertoire utilisateur - Fonction: create_user_directory(username)]
+    C2 --> C3[Génération d'une paire de clés RSA - Fonction: generate_rsa_keypair(bits)]
+    C3 --> C4[Stockage de la clé publique en clair - Fonction: save_public_key(username, public_key)]
+
+    %% Dérivation de la clé (KDF)
+    C4 --> D[Dérivation de la Clé (KDF)]
+    D --> D1[Entrée d'un mot de passe par l'utilisateur - Entrée utilisateur]
+    D1 --> D2[Dérivation de la clé privée avec un KDF - Fonction: kdf(password, salt, iterations)]
+    D2 --> D3[Génération d'un sel pour la clé privée - Fonction: generate_salt()]
+    D3 --> D4[Stockage de la clé privée dérivée et du sel - Fonction: save_private_key(username, private_key, salt)]
+
+    %% Authentification à double sens
+    D4 --> E[Authentification à Double Sens]
+    E --> E1[Demande de certificat au coffre-fort - Fonction: request_certificate()]
+    E1 --> E2[Vérification du certificat avec l'Autorité de Certification - Fonction: verify_certificate()]
+    E2 --> E3[Preuve de connaissance de la clé privée - Fonction: zkp_proof_of_knowledge(username)]
+    E3 --> E4[Authentification réussie - Validation de l'authentification]
+
+    %% Échange de clés
+    E4 --> F[Échange de Clés]
+    F --> F1[Échange d'une clé de session via Diffie-Hellman - Fonction: diffie_hellman_exchange()]
+    F1 --> F2[Création d'une clé temporaire pour les échanges - Clé de session]
+
+    %% Dépôt/Consultation de fichiers
+    F2 --> G[Dépôt/Consultation de Fichiers]
+    G --> G1[Dépôt ou consultation des fichiers - Fonction: access_file(username, file_name)]
+    G1 --> G2[Chiffrement des fichiers avec COBRA - Fonction: cobra_encrypt(file_content, session_key)]
+    G2 --> G3[Authentification de chaque échange avec un HMAC - Fonction: hmac_authenticate(session_key, message)]
+    G3 --> G4[Chiffrement des fichiers pour le stockage avec RSA - Fonction: rsa_encrypt(file_content, private_key)]
+
+    %% Fin du processus
+    G4 --> H[Fin]
+```
