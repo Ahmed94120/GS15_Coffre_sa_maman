@@ -96,7 +96,7 @@ flowchart TD
 
     %% Enrôlement
     A[Début] --> B[Enrôlement]
-    B --> C1[Création d'un compte - create_account(username)]
+    B --> C1[Création d'un compte - create_accountusername]
     C1 --> C2[Génération d'un répertoire utilisateur - create_user_directory(username)]
     C2 --> C3[Génération d'une paire de clés RSA - generate_rsa_keypair(bits)]
     C3 --> C4[Stockage de la clé publique en clair - save_public_key(username, public_key)]
