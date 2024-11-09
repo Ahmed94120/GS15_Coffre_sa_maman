@@ -1,5 +1,5 @@
 from key_management.key_generation import generate_rsa_keypair
-from key_management.key_storage import save_public_key, save_private_key
+from storage.key_storage import save_public_key, save_private_key
 
 def enroll_user(username):
     """Enrôle un nouvel utilisateur en générant et stockant ses clés RSA."""

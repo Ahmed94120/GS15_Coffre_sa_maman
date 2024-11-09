@@ -1,4 +1,4 @@
-from utils.prime_utils import generate_prime
+from utils.prime import generate_prime
 
 def generate_rsa_keypair(bits=1024):
     """Génère un couple de clés publique et privée RSA."""
