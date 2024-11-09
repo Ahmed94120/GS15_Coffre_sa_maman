@@ -87,7 +87,6 @@ Utilisateur                                         Coffre-Fort / Serveur
    │    la clé privée de l'utilisateur (chiffrement RSA)    │
    │<───────────────────────────────────────────────────────│
 ```
-# Processus d'Utilisation du Coffre-Fort Numérique
 
 # Processus d'Utilisation du Coffre-Fort Numérique
 
@@ -96,36 +95,38 @@ flowchart TD
 
     %% Enrôlement
     A[Début] --> B[Enrôlement]
-    B --> C1[Création d'un compte - create_accountusername]
-    C1 --> C2[Génération d'un répertoire utilisateur - create_user_directory(username)]
-    C2 --> C3[Génération d'une paire de clés RSA - generate_rsa_keypair(bits)]
-    C3 --> C4[Stockage de la clé publique en clair - save_public_key(username, public_key)]
+    B --> C1[Création d'un compte - create_account username]
+    C1 --> C2[Génération d'un répertoire utilisateur - create_user_directory username]
+    C2 --> C3[Génération d'une paire de clés RSA - generate_rsa_keypair bits]
+    C3 --> C4[Stockage de la clé publique en clair - save_public_key username public_key]
 
     %% Dérivation de la clé (KDF)
-    C4 --> D[Dérivation de la Clé (KDF)]
+    C4 --> D[Dérivation de la Clé KDF]
     D --> D1[Entrée d'un mot de passe par l'utilisateur]
-    D1 --> D2[Dérivation de la clé privée avec un KDF - kdf(password, salt, iterations)]
-    D2 --> D3[Génération d'un sel pour la clé privée - generate_salt()]
-    D3 --> D4[Stockage de la clé privée dérivée et du sel - save_private_key(username, private_key, salt)]
+    D1 --> D2[Dérivation de la clé privée avec un KDF - kdf password salt iterations]
+    D2 --> D3[Génération d'un sel pour la clé privée - generate_salt]
+    D3 --> D4[Stockage de la clé privée dérivée et du sel - save_private_key username private_key salt]
 
     %% Authentification à double sens
     D4 --> E[Authentification à Double Sens]
-    E --> E1[Demande de certificat au coffre-fort - request_certificate()]
-    E1 --> E2[Vérification du certificat avec l'Autorité de Certification - verify_certificate()]
-    E2 --> E3[Preuve de connaissance de la clé privée - zkp_proof_of_knowledge(username)]
+    E --> E1[Demande de certificat au coffre-fort - request_certificate]
+    E1 --> E2[Vérification du certificat avec l'Autorité de Certification - verify_certificate]
+    E2 --> E3[Preuve de connaissance de la clé privée - zkp_proof_of_knowledge username]
     E3 --> E4[Authentification réussie]
 
     %% Échange de clés
     E4 --> F[Échange de Clés]
-    F --> F1[Échange d'une clé de session via Diffie-Hellman - diffie_hellman_exchange()]
+    F --> F1[Échange d'une clé de session via Diffie-Hellman - diffie_hellman_exchange]
     F1 --> F2[Création d'une clé temporaire pour les échanges]
 
     %% Dépôt/Consultation de fichiers
     F2 --> G[Dépôt/Consultation de Fichiers]
-    G --> G1[Dépôt ou consultation des fichiers - access_file(username, file_name)]
-    G1 --> G2[Chiffrement des fichiers avec COBRA - cobra_encrypt(file_content, session_key)]
-    G2 --> G3[Authentification de chaque échange avec un HMAC - hmac_authenticate(session_key, message)]
-    G3 --> G4[Chiffrement des fichiers pour le stockage avec RSA - rsa_encrypt(file_content, private_key)]
+    G --> G1[Dépôt ou consultation des fichiers - access_file username file_name]
+    G1 --> G2[Chiffrement des fichiers avec COBRA - cobra_encrypt file_content session_key]
+    G2 --> G3[Authentification de chaque échange avec un HMAC - hmac_authenticate session_key message]
+    G3 --> G4[Chiffrement des fichiers pour le stockage avec RSA - rsa_encrypt file_content private_key]
 
     %% Fin du processus
     G4 --> H[Fin]
+
+
