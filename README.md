@@ -45,3 +45,65 @@ Dossier de documentation, incluant le rapport du projet et les diagrammes d'arch
 
 ```bash
 python src/main.py
+```
+
+
+```Markdown
+Utilisateur                                         Coffre-Fort / Serveur
+   │                                                        │
+   │                       **1. Enrôlement**                │
+   │───────────────────────────────────────────────────────>│
+   │  - L'utilisateur crée un compte                        │
+   │  - Un répertoire est créé pour l'utilisateur           │
+   │  - Génération d'une paire de clés (publique/privée)    │
+   │  - La clé publique est stockée en clair               │
+   │<───────────────────────────────────────────────────────│
+
+   │                       **2. Dérivation de la Clé (KDF)** │
+   │───────────────────────────────────────────────────────>│
+   │  - L'utilisateur entre un mot de passe                 │
+   │  - Le mot de passe est transformé en clé privée        │
+   │    via une fonction de dérivation (KDF)                │
+   │  - Le sel est généré pour sécuriser la clé privée      │
+   │  - La clé privée dérivée et le sel sont stockés        │
+   │<───────────────────────────────────────────────────────│
+
+   │                **3. Authentification à Double Sens**   │
+   │───────────────────────────────────────────────────────>│
+   │  - Demande de certificat au coffre-fort                │
+   │  - Vérification par une Autorité de Certification      │
+   │<───────────────────────────────────────────────────────│
+   │───────────────────────────────────────────────────────>│
+   │  - L'utilisateur s'authentifie au coffre-fort          │
+   │  - Preuve de possession de la clé privée               │
+   │    via une preuve à divulgation nulle (ZKP)            │
+   │<───────────────────────────────────────────────────────│
+
+   │                    **4. Échange de Clés**              │
+   │───────────────────────────────────────────────────────>│
+   │  - L'utilisateur et le serveur échangent une           │
+   │    clé de session en utilisant Diffie-Hellman          │
+   │  - La clé de session sécurise les échanges             │
+   │<───────────────────────────────────────────────────────│
+
+   │         **5. Dépôt / Consultation de Fichiers**        │
+   │───────────────────────────────────────────────────────>│
+   │  - Dépôt ou consultation de fichiers                   │
+   │  - Les fichiers sont chiffrés avec l'algorithme COBRA  │
+   │    (chiffrement symétrique)                            │
+   │  - Utilisation d'un hash MAC pour authentifier         │
+   │    chaque échange                                      │
+   │  - Les fichiers sont chiffrés pour stockage avec       │
+   │    la clé privée de l'utilisateur (chiffrement RSA)    │
+   │<───────────────────────────────────────────────────────│
+
+
+
+```
+
+
+
+
+
+
+
