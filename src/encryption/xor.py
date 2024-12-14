@@ -8,6 +8,9 @@ def string_to_bits_separated(input_string):
     """
     return [format(ord(char), '08b') for char in input_string]
 
+def binary_to_list(bits):
+    return [bits[i:i + 8] for i in range(0, len(bits), 8)]
+
 def xor_encrypt_decrypt(binary_message, key):
     """
     Encrypts or decrypts a binary message using XOR with a key.

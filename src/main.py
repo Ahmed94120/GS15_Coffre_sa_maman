@@ -49,8 +49,10 @@ if __name__ == "__main__":
 
    # Convert the message to binary representation
     binary_result_list = string_to_bits_separated(message)
-    #print(f"Message original: {message}")
-    #print(f"Representation binaire de '{message}' en liste: {binary_result_list}\n")
+    print(f"Message original: {message}")
+    print(f"Representation binaire de '{message}' en liste: {binary_result_list}\n")
+    print(f"Length message: {len(message)}")
+    print(f"Length of binary message: {len(binary_result_list)}\n")
 
     # Encrypt the binary message
     encrypted_message = xor_encrypt_decrypt(binary_result_list, key)
@@ -79,8 +81,9 @@ if __name__ == "__main__":
     decoded_binary_string = decode_substituted_blocks(decoded)
     print(f"Message decodé après subsitution: {''.join(decoded_binary_string)}\n")
 
-    # Decrypt the binary message
-    decrypted_message = xor_encrypt_decrypt(encrypted_message, key)
+    binary_result_list = binary_to_list(decoded_binary_string)
+    # Decrypt the xored message
+    decrypted_message = xor_encrypt_decrypt(binary_result_list, key)
     print(f"Message decodé: {''.join(decrypted_message)}\n")
 
     # Convert decrypted binary back to text
