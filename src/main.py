@@ -1,7 +1,10 @@
 from key_management.user_enrollment import enroll_user
+
 from encryption.xor import *
 from encryption.substitution import *
 from encryption.feistel import *
+from encryption.linearTransformation import *
+
 from encryption.outils.hashing import *
 
 if __name__ == "__main__":
@@ -51,9 +54,7 @@ if __name__ == "__main__":
     binary_result_list = string_to_bits_separated(message)
     print(f"Message original: {message}")
     print(f"Representation binaire de '{message}' en liste: {binary_result_list}\n")
-    print(f"Length message: {len(message)}")
-    print(f"Length of binary message: {len(binary_result_list)}\n")
-
+    
     # Encrypt the binary message
     encrypted_message = xor_encrypt_decrypt(binary_result_list, key)
     print(f"Message encodé: {''.join(encrypted_message)}\n")
@@ -68,17 +69,24 @@ if __name__ == "__main__":
     encrypted_feistel = feistel(substituted_blocks, W)
     print(f"Message encodé après feistel: {encrypted_feistel}\n")
 
+    #Linear Transformation
+    final_encrypted = encode_linear_transformation(encrypted_feistel)
+    print(f"Message encodé après transformation linéaire: {final_encrypted}\n")
 
     print("\n############################################################")
     print("Decode the message")
     print("############################################################\n")
 
+    # Decode the linear transformation
+    decoded = decode_linear_transformation(final_encrypted)
+    print(f"Message decodé après transformation linéaire: {decoded}\n")
+
     # Decode the feistel encoded message
-    decoded = feistel_decode(encrypted_feistel, W)
-    print(f"Message decodé après feistel: {''.join(decoded)}\n")
+    decoded_feistel = feistel_decode(decoded, W)
+    print(f"Message decodé après feistel: {''.join(decoded_feistel)}\n")
 
     # Decode the substituted blocks
-    decoded_binary_string = decode_substituted_blocks(decoded)
+    decoded_binary_string = decode_substituted_blocks(decoded_feistel)
     print(f"Message decodé après subsitution: {''.join(decoded_binary_string)}\n")
 
     binary_result_list = binary_to_list(decoded_binary_string)
