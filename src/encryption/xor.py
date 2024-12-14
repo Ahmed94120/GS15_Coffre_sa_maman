@@ -1,53 +1,30 @@
-import numpy as np
-from outils.blocks import *
+from encryption.outils.blocks import pad_key_to_size
 
-# Xor entre un bloc et une clé
-def add_round_key(block_msg, block_key):
-    return np.bitwise_xor(block_msg, block_key)
+KEY_BIT_SIZE = 128
 
+def string_to_bits_separated(input_string):
+    """
+    Converts a string into its binary representation as a list of 8-bit strings.
+    """
+    return [format(ord(char), '08b') for char in input_string]
 
-# Fonction principale pour chiffrer un message avec une clé
-def encrypt_message_with_key(message, key, block_size=16):
-    # Convertir le message et la clé en tableau de bytes
-    message = pad_message(message, block_size)
-    message_bytes = text_to_byte_array(message)
-    key_bytes = text_to_byte_array(key)
-
-    # Assurer que la clé est de 128 bits (16 octets)
-    if len(key_bytes) < block_size:
-        key_bytes = np.pad(key_bytes, (0, block_size - len(key_bytes)), 'wrap')
-    elif len(key_bytes) > block_size:
-        key_bytes = key_bytes[:block_size]
-
-    # Découper le message en blocs
-    blocks = split_into_blocks(message_bytes, block_size)
-
-    # Appliquer XOR bloc par bloc
-    encrypted_blocks = [add_round_key(block, key_bytes) for block in blocks]
-
-    # Retourner le message chiffré
-    return np.concatenate(encrypted_blocks)
-
-
-
-
-# Fonction pour déchiffrer un message avec une clé
-def decrypt_message_with_key(encrypted_bytes, key, block_size=16):
-    # Convertir la clé en tableau de bytes
-    key_bytes = text_to_byte_array(key)
-
-    # Assurer que la clé est de 128 bits (16 octets)
-    if len(key_bytes) < block_size:
-        key_bytes = np.pad(key_bytes, (0, block_size - len(key_bytes)), 'wrap')
-    elif len(key_bytes) > block_size:
-        key_bytes = key_bytes[:block_size]
-
-    # Découper les données chiffrées en blocs
-    blocks = split_into_blocks(encrypted_bytes, block_size)
-
-    # Appliquer XOR bloc par bloc pour déchiffrer
-    decrypted_blocks = [add_round_key(block, key_bytes) for block in blocks]
-
-    # Convertir les blocs en texte et retirer le padding
-    decrypted_message = byte_array_to_text(np.concatenate(decrypted_blocks))
-    return unpad_message(decrypted_message)
+def xor_encrypt_decrypt(binary_message, key):
+    """
+    Encrypts or decrypts a binary message using XOR with a key.
+    """
+    # Get x-bit binary key
+    binary_key = pad_key_to_size(key, KEY_BIT_SIZE)
+    
+    # Repeat key bits to match the length of the message
+    full_key_bits = ''.join(binary_key[i % KEY_BIT_SIZE] for i in range(len(binary_message) * 8))
+    #print("Full key :", full_key_bits)
+    
+    # XOR each bit of the binary message with the corresponding key bit
+    encrypted_binary_message = []
+    for i, char_bits in enumerate(binary_message):
+        encrypted_bits = ''.join(
+            str(int(bit) ^ int(full_key_bits[i * 8 + j])) for j, bit in enumerate(char_bits)
+        )
+        encrypted_binary_message.append(encrypted_bits)
+    
+    return encrypted_binary_message
