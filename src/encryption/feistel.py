@@ -1,4 +1,3 @@
-
 def tabulate_f():
     # Initialise le tableau des résultats pour f(x)
     Z = [0] * 256  # 256 entrées pour les valeurs 0 à 255
