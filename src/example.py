@@ -1,0 +1,80 @@
+from key_management.user_enrollment import enroll_user
+
+from encryption.xor import *
+from encryption.substitution import *
+from encryption.feistel import *
+from encryption.linearTransformation import *
+
+from encryption.outils.hashing import *
+
+if __name__ == "__main__":
+    #username = input("Entrez le nom d'utilisateur pour l'enrôlement : ")
+    #enroll_user(username)
+
+    # Exemple d'utilisation
+    message = "Hello, World! This is a test message."
+    key = "Monmdp1234"
+    print(f"Message original: {message}")
+    print(f"Clé original: {key}\n")
+
+    hash = sha256(key.encode())
+    print(f"Hash du mdp : {hash}\n")
+
+    K = subkeys(hash)
+    print(f"Sous clé du hash: {K}\n\n")
+
+    W = generate_tour_keys(K)
+    print(f"Liste des clés de tour: {W}\n")
+
+    print("############################################################")
+    print("# encode the message")
+    print("############################################################\n")
+
+
+   # Convert the message to binary representation
+    binary_result_list = string_to_bits_separated(message)
+    print(f"Message original: {message}")
+    print(f"Representation binaire de '{message}' en liste: {binary_result_list}\n")
+    
+    # Encrypt the binary message
+    encrypted_message = xor_encrypt_decrypt(binary_result_list, key)
+    print(f"Message encodé: {''.join(encrypted_message)}\n")
+
+    # Substitute using S-boxes
+    # Join encrypted binary into a single string
+    encrypted_binary_string = ''.join(encrypted_message)
+    substituted_blocks = substitute_with_sboxes(encrypted_binary_string)
+    print(f"Message encodé après substitution: {''.join(substituted_blocks)}\n")
+    print(substituted_blocks)
+    # Feistel
+    encrypted_feistel = feistel(substituted_blocks, W)
+    print(f"Message encodé après feistel: {encrypted_feistel}\n")
+
+    #Linear Transformation
+    final_encrypted = encode_linear_transformation(encrypted_feistel)
+    print(f"Message encodé après transformation linéaire: {final_encrypted}\n")
+
+    print("\n############################################################")
+    print("Decode the message")
+    print("############################################################\n")
+
+    # Decode the linear transformation
+    decoded = decode_linear_transformation(final_encrypted)
+    print(f"Message decodé après transformation linéaire: {decoded}\n")
+
+    # Decode the feistel encoded message
+    decoded_feistel = feistel_decode(decoded, W)
+    print(f"Message decodé après feistel: {''.join(decoded_feistel)}\n")
+
+    # Decode the substituted blocks
+    decoded_binary_string = decode_substituted_blocks(decoded_feistel)
+    print(f"Message decodé après subsitution: {''.join(decoded_binary_string)}\n")
+
+    binary_result_list = binary_to_list(decoded_binary_string)
+    # Decrypt the xored message
+    decrypted_message = xor_encrypt_decrypt(binary_result_list, key)
+    print(f"Message decodé: {''.join(decrypted_message)}\n")
+
+    # Convert decrypted binary back to text
+    decrypted_text = ''.join(chr(int(bits, 2)) for bits in decrypted_message)
+    print(f"Message clair: {decrypted_text}")
