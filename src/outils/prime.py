@@ -1,6 +1,6 @@
 import random
 
-def generate_prime(bits=512):
+def generate_prime(bits=2024):
     """Génère un nombre premier de la taille spécifiée."""
     while True:
         prime = random.getrandbits(bits)

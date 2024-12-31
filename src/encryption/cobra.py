@@ -3,7 +3,7 @@ from encryption.substitution import *
 from encryption.feistel import *
 from encryption.linearTransformation import *
 
-from encryption.outils.hashing import *
+from outils.hashing import *
 
 def cobra_encode(file, key):
     hash = sha256(key.encode())

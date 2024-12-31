@@ -1,4 +1,4 @@
-from encryption.outils.blocks import pad_key_to_size
+from outils.blocks import pad_key_to_size
 
 KEY_BIT_SIZE = 128
 
