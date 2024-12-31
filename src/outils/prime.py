@@ -1,13 +1,13 @@
 import random
 
-def generate_prime(bits=512):
+def generate_prime(bits=2024):
     """Génère un nombre premier de la taille spécifiée."""
     while True:
         prime = random.getrandbits(bits)
-        if Miller_Rabin(prime):
+        if is_prime(prime):
             return prime
 
-def Miller_Rabin(n, k=10):
+def is_prime(n, k=10):
     """Test de primalité de Miller-Rabin."""
     if n < 2:
         return False
