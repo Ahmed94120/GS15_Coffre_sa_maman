@@ -57,7 +57,7 @@ def upload_file_client_to_serv(username, shared_key, file_path):
         raise FileNotFoundError(f"Le fichier '{file_path}' est introuvable.")
 
     # Lire le contenu du fichier
-    with open(file_path, "r") as file:
+    with open(file_path, "rb") as file:
         data = file.read()
             
         
