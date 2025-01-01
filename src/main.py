@@ -40,7 +40,9 @@ def handle_file_operations(username, shared_key):
 
         if choice == "1":
             file_path = input("Entrez le chemin du fichier à uploader : ")
-            upload_file(username, shared_key, file_path)
+            encrypted_file_name, cobra_encrypted_data = upload_file_client_to_serv(username, shared_key, file_path)
+            handle_file_upload_server(username, encrypted_file_name, cobra_encrypted_data, shared_key)
+
         elif choice == "2":
             files = list_user_files(username)
             print("\nFichiers disponibles dans votre répertoire serveur :")
@@ -56,7 +58,7 @@ def handle_file_operations(username, shared_key):
             print("Choix invalide. Veuillez réessayer.")
 
 if __name__ == "__main__":
-    try:
+    
         initialize_server()
         print("\nBienvenue dans le système de coffre-fort sécurisé.")
         choice = input("\n===Souhaitez-vous créer un compte (1) ou vous authentifier (2) ? (1/2) : ===")
@@ -82,19 +84,17 @@ if __name__ == "__main__":
                     print(f"Erreur : l'utilisateur {username} n'existe pas. Veuillez créer un compte.")
                 else:
                     print(f"Authentification pour l'utilisateur {username} en cours...")
-                    try:
+                   
 
-                        connected = ZeroKnowledgeProof(load_public_key(username), load_private_key(username))
-                        if connected:
-                            print(f"Authentification réussie pour l'utilisateur {username}.")
-                            shared_key = handle_diffie_hellman()
-                            handle_file_operations(username, shared_key)
-                        
-                        else:
-                            print("Authentification échouée. Accès refusé.")
-                    except Exception as e:
-                        print(f"Erreur lors de l'authentification : {e}")
-    except Exception as e:
-        print(f"Une erreur inattendue s'est produite : {e}")
-    finally:
+                    connected = ZeroKnowledgeProof(load_public_key(username), load_private_key(username))
+                    if connected:
+                        print(f"Authentification réussie pour l'utilisateur {username}.")
+                        shared_key = handle_diffie_hellman()
+                        handle_file_operations(username, shared_key)
+                                    
+                    else:
+                        print("Authentification échouée. Accès refusé.")
+                    
+   
+        
         print("Merci d'avoir utilisé le coffre-fort sécurisé. Programme terminé.")

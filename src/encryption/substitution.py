@@ -6,7 +6,6 @@ S_BOXES = [
     {i: format((i ^ 9) % 16, '04b') for i in range(16)},  # Example S-box 4
 ]
 
-print(S_BOXES)
 
 INVERSE_S_BOXES = [{v: format(k, '04b') for k, v in sbox.items()} for sbox in S_BOXES]
 

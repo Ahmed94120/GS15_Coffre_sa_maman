@@ -44,7 +44,7 @@ def load_private_key(username):
         print("Error: Invalid private key format.")
         return None
 
-def upload_file(username, shared_key, file_path):
+def upload_file_client_to_serv(username, shared_key, file_path):
     """
     Gère l'upload d'un fichier en le chiffrant avec COBRA puis RSA.
 
@@ -57,22 +57,20 @@ def upload_file(username, shared_key, file_path):
         raise FileNotFoundError(f"Le fichier '{file_path}' est introuvable.")
 
     # Lire le contenu du fichier
-    with open(file_path, "rb") as file:
+    with open(file_path, "r") as file:
         data = file.read()
+            
+        
 
     # Chiffrement avec COBRA (clé partagée)
-    cobra_encrypted_data = cobra_encode(data.decode(), shared_key)
+    cobra_encrypted_data = cobra_encode(data, shared_key)
 
-    # Charger la clé publique de l'utilisateur
-    public_key = load_public_key(username)
 
-    # Chiffrement avec RSA
-    rsa_encrypted_data = pow(int.from_bytes(cobra_encrypted_data.encode(), "big"), public_key[0], public_key[1])
 
     # Déposer le fichier côté serveur
     encrypted_file_name = os.path.basename(file_path) + ".enc"
-    handle_file_upload(username, encrypted_file_name, rsa_encrypted_data.to_bytes((rsa_encrypted_data.bit_length() + 7) // 8, "big"))
-    print(f"Fichier '{file_path}' chiffré et uploadé avec succès.")
+    return encrypted_file_name, cobra_encrypted_data
+    
 
 def download_file(username, shared_key, file_name):
     """

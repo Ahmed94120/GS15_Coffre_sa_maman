@@ -1,5 +1,5 @@
 import os
-
+from encryption.cobra import *
 SERVER_DIR = "./server"
 USERS_DIR = os.path.join(SERVER_DIR, "Users")
 REPERTOIRE_DIR = os.path.join(SERVER_DIR, "Repertoire")
@@ -65,7 +65,7 @@ def load_public_key(username):
         return None
 
 
-def handle_file_upload(username, file_name, encrypted_data):
+def handle_file_upload_server(username, file_name, encrypted_data, shared_key):
     """
     Permet à un utilisateur de déposer un fichier dans son répertoire côté serveur.
 
@@ -73,14 +73,20 @@ def handle_file_upload(username, file_name, encrypted_data):
         username (str): Nom d'utilisateur.
         file_name (str): Nom du fichier.
         encrypted_data (bytes): Données chiffrées à stocker.
+        shared_key (str): Clé partagée pour le chiffrement COBRA.
     """
+
+
+    decrypted_data = cobra_decode(encrypted_data, shared_key)
+    print(decrypted_data)
+    print(type(decrypted_data))
     user_dir = os.path.join(REPERTOIRE_DIR, username)
     if not os.path.exists(user_dir):
         raise FileNotFoundError(f"Le répertoire de l'utilisateur {username} est introuvable.")
 
     file_path = os.path.join(user_dir, file_name)
     with open(file_path, "wb") as file:
-        file.write(encrypted_data)
+        file.write(decrypted_data)
 
     log_action(f"Fichier '{file_name}' déposé par l'utilisateur {username}.")
 
