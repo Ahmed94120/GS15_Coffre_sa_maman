@@ -14,7 +14,7 @@ def mod_exp(base, exponent, modulus):
 
 def parametres_globaux():
     """Génère les paramètres globaux : un nombre premier et un générateur."""
-    p = generate_prime()  # Nombre premier
+    p = generate_prime(512)  # Nombre premier
     g = random.randint(2, p-1)  # Générateur aléatoire
     print(f"Paramètres globaux : p = {p}, g = {g}")
     return p, g

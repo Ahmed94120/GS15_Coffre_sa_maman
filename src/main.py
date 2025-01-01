@@ -1,9 +1,9 @@
 from encryption.diffiehellman import parametres_globaux, private_key, mod_exp, diffiehellman
 from encryption.cobra import cobra_encode, cobra_decode
-from server import initialize_server, handle_user_enrollment, check_user_exists, list_user_files
-from client import initialize_client, client_authentication, upload_file, download_file
-from encryption.rsa import generate_salt, custom_kdf, generate_rsa_keypair_from_derived_key
-from authentification.zkp import compute_certificate, load_user_certificate, load_salt
+from server import *
+from client import *
+from encryption.rsa import rsa_key_derivaded
+from authentification.zkp import ZeroKnowledgeProof
 
 def handle_diffie_hellman():
     """
@@ -68,18 +68,13 @@ if __name__ == "__main__":
                 print(f"Erreur : l'utilisateur {username} existe déjà.")
             else:
                 password = input("Entrez un mot de passe : ")
-                salt = generate_salt()
-                derived_key = custom_kdf(password, salt)
-                public_key, private_key = generate_rsa_keypair_from_derived_key(derived_key)
-                print(f"Clé privée générée lors de l'enrôlement : {private_key}")
-                cert = compute_certificate(public_key, private_key)
-                
+                public_key, private_key = rsa_key_derivaded(password)
                 # Créer le répertoire client et sauvegarder les clés
-                initialize_client(username, password)
-
+                initialize_client(username, public_key, private_key)
                 # Enregistrer les informations côté serveur
-                handle_user_enrollment(username, public_key, cert, salt)
+                handle_user_enrollment(username, public_key)
                 print(f"Utilisateur {username} enrôlé avec succès.")
+
         elif choice == "2":
                  # Authentification d'un utilisateur existant
                 username = input("Entrez votre nom d'utilisateur : ")
@@ -87,21 +82,14 @@ if __name__ == "__main__":
                     print(f"Erreur : l'utilisateur {username} n'existe pas. Veuillez créer un compte.")
                 else:
                     print(f"Authentification pour l'utilisateur {username} en cours...")
-                    password = input("Entrez votre mot de passe : ")
                     try:
-                        public_key, cert = load_user_certificate(username)
-                        print(f"Certificat chargé lors de l'authentification : {cert}")
-                        salt = load_salt(username)
-                        derived_key = custom_kdf(password, salt)
-                        private_key = generate_rsa_keypair_from_derived_key(derived_key)[1]
-                        print(f"Clé privée dérivée lors de l'authentification : {private_key}")
+
+                        connected = ZeroKnowledgeProof(load_public_key(username), load_private_key(username))
+                        if connected:
+                            print(f"Authentification réussie pour l'utilisateur {username}.")
+                            """shared_key = handle_diffie_hellman()
+                            handle_file_operations(username, shared_key)"""
                         
-                        # Authentification via ZKP
-                        is_valid = client_authentication(username, private_key)
-                        if is_valid:
-                            print("Authentification réussie. Accès autorisé au coffre-fort.")
-                            shared_key = handle_diffie_hellman()
-                            handle_file_operations(username, shared_key)
                         else:
                             print("Authentification échouée. Accès refusé.")
                     except Exception as e:

@@ -1,6 +1,6 @@
 import random
 
-def generate_prime(bits=2024):
+def generate_prime(bits):
     """Génère un nombre premier de la taille spécifiée."""
     while True:
         prime = random.getrandbits(bits)
@@ -31,3 +31,11 @@ def is_prime(n, k=10):
         else:
             return False
     return True
+
+def mod_inverse(a, m):
+    m0, x0, x1 = m, 0, 1
+    while a > 1:
+        q = a // m
+        a, m = m, a % m
+        x0, x1 = x1 - q * x0, x0
+    return x1 + m0 if x1 < 0 else x1

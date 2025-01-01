@@ -1,101 +1,78 @@
 import random
 import os
-from server import USERS_DIR
 
 
-def compute_certificate(public_key, private_key):
-    e, n = public_key
-    d, _ = private_key
-    cert = random.randint(1, n - 1)
-    computed_cert = pow(cert, d, n)
-    print(f"Certificat généré lors de l'enrôlement : {computed_cert}")
-    return computed_cert
+def gcd(a, b):
+    """Calculate the greatest common divisor (GCD) of two numbers."""
+    while b != 0:
+        a, b = b, a % b
+    return a
 
-def store_user_certificate(username, public_key, cert):
-    """
-    Stocke la clé publique et le certificat pour un utilisateur.
-    """
-    user_file = os.path.join(USERS_DIR, f"{username}.txt")
-    e, n = public_key
-    with open(user_file, "w") as file:
-        file.write(f"{e}\n{n}\n{cert}")
 
-def load_user_certificate(username):
-    """
-    Charge la clé publique et le certificat d'un utilisateur.
-    """
-    user_file = os.path.join(USERS_DIR, f"{username}.txt")
-    if not os.path.exists(user_file):
-        raise FileNotFoundError(f"Certificat pour l'utilisateur {username} introuvable.")
-    
-    with open(user_file, "r") as file:
+def generate_coprime(n):
+    """Generate a random number B that is coprime with n."""
+    while True:
+        B = random.randint(1, n - 1)
+        if gcd(B, n) == 1:
+            return B
+
+
+class ZeroKnowledgeProof:
+    def __init__(self, public_key, private_key):
+        if not public_key or not private_key:
+            raise ValueError("Public and private keys are required.")
+        self.public_key = public_key
+        self.private_key = private_key
+        self.T_n = None
+        self.d = None
+
+    def prover_step(self):
+        """Execute the prover logic."""
+        n_prover, _ = self.private_key
+
+        # Step 1: Generate B and retrieve e from verifier
+        B = generate_coprime(n_prover)
+        e = self.verifier_step(step="send_e")
+
+        # Step 2: Compute J
         try:
-            lines = file.readlines()
-            e = int(lines[0].strip())
-            n = int(lines[1].strip())
-            cert = int(lines[2].strip())
-        except (ValueError, IndexError):
-            raise ValueError(f"Format incorrect dans le fichier utilisateur {username}.")
-    return (e, n), cert
+            J = pow(pow(B, -1, n_prover), e, n_prover)
+        except ValueError:
+            raise ValueError("Failed to calculate modular inverse. Check coprimality of B and n_prover.")
 
+        # Step 3: Generate r and compute T
+        r = random.randint(1, n_prover - 1)
+        T = pow(r, e, n_prover)
 
+        # Step 4: Send T to verifier and receive d
+        self.d = self.verifier_step(step="send_d", T=T, J=J, e=e)
 
-def guillou_quisquater_generate_proof(public_key, private_key, cert):
-    e, n = public_key
-    d, _ = private_key
+        # Step 5: Compute t and send it to verifier
+        t = (r * pow(B, self.d, n_prover)) % n_prover
+        result = self.verifier_step(step="verify", t=t, J=J, e=e)
 
-    # Étape 1 : Génération de m
-    m = random.randint(1, n - 1) % n
-    M = pow(m, e, n)
+        return result == "success"
 
-    # Étape 2 : Génération du challenge
-    r = random.randint(1, e - 1)
-    cert_r = pow(cert, r, n)
+    def verifier_step(self, step, T=None, t=None, J=None, e=None):
+        """Execute the verifier logic."""
+        n_verifier, e_verifier = self.public_key
 
-    # Étape 3 : Calcul de la preuve
-    proof = (m * cert_r) % n
+        if step == "send_e":
+            return e_verifier
+        elif step == "send_d":
+            self.T_n = T
+            self.d = random.randint(0, e_verifier - 1)
+            return self.d
+        elif step == "verify":
+            P = (pow(t, e_verifier, n_verifier) * pow(J, self.d, n_verifier)) % n_verifier
+            return "success" if P == self.T_n else "failure"
+        else:
+            raise ValueError("Invalid step in verifier.")
 
-    print(f"M calculé : {M}, m utilisé : {m}")
-    print(f"Proof calculé : {proof}, Cert^r mod n : {cert_r}")
-
-    return M, proof, r
-
-def guillou_quisquater_verify_proof(public_key, cert, M, proof, r):
-    e, n = public_key
-
-    # Étape 1 : Calcul de Left
-    left = pow(proof, e, n)
-
-    # Étape 2 : Calcul de Right
-    right_M = M % n
-    right_cert = pow(cert, r, n)
-    right = (right_M * right_cert) % n
-
-    # Affichage pour validation
-    print(f"Verification Guillou-Quisquater :")
-    print(f"  Left (Proof^e mod n): {left}")
-    print(f"  Right_M (M mod n): {right_M}")
-    print(f"  Right_Cert (Cert^r mod n): {right_cert}")
-    print(f"  Right (M * Cert^r mod n): {right}")
-
-    return left == right
-
-def load_salt(username):
-    """
-    Charge le sel associé à un utilisateur.
-
-    Args:
-        username (str): Nom de l'utilisateur.
-
-    Returns:
-        bytes: Le sel associé.
-    """
-    user_file = os.path.join(USERS_DIR, f"{username}.txt")
-    if not os.path.exists(user_file):
-        raise FileNotFoundError(f"Le fichier utilisateur pour {username} est introuvable.")
-
-    with open(user_file, "r") as file:
-        lines = file.readlines()
-        if len(lines) < 4:
-            raise ValueError(f"Le fichier utilisateur pour {username} est corrompu.")
-        return bytes.fromhex(lines[3].strip())
+    def authenticate(self):
+        """Run the Zero-Knowledge Proof authentication."""
+        try:
+            return self.prover_step()
+        except Exception as e:
+            print(f"Error during ZKP: {e}")
+            return False

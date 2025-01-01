@@ -1,12 +1,10 @@
-from authentification.zkp import guillou_quisquater_generate_proof, guillou_quisquater_verify_proof, load_user_certificate
-from server import handle_file_upload, handle_file_download
-from encryption.rsa import load_public_key, load_private_key, generate_rsa_keypair_from_derived_key, save_keypair
+from server import *
 from encryption.cobra import cobra_encode, cobra_decode
 import os
 
 CLIENT_DIR = "./client"
 
-def initialize_client(username, password):
+def initialize_client(username, public_key, private_key):
     """
     Initialise le répertoire client et génère les clés publique et privée.
 
@@ -16,53 +14,35 @@ def initialize_client(username, password):
     """
     client_user_dir = os.path.join(CLIENT_DIR, username)
     os.makedirs(client_user_dir, exist_ok=True)
-    salt = os.urandom(16)  # Générer un sel aléatoire
-    derived_key = password.encode() + salt  # Simplification de la dérivation de clé
 
-    # Générer une paire de clés RSA à partir de la clé dérivée
-    public_key, private_key = generate_rsa_keypair_from_derived_key(derived_key)
 
     # Sauvegarder les clés dans le répertoire client
-    save_keypair(username, public_key, private_key)
+    private_key_file = os.path.join(client_user_dir, f"private_key.txt")
+    with open(private_key_file, "w") as file:
+        file.write(f"{private_key[0]},\n{private_key[1]}")
+    
+    public_key_file = os.path.join(client_user_dir, f"public_key.txt")
+    with open(public_key_file, "w") as file:
+        file.write(f"{public_key[0]},\n{public_key[1]}")
 
     print(f"Répertoire client initialisé pour {username}. Clés générées et sauvegardées.")
 
-def client_authentication(username, private_key):
-    """
-    Effectue l'authentification de l'utilisateur via le protocole Guillou-Quisquater.
 
-    Args:
-        username (str): Nom de l'utilisateur.
-        private_key (tuple): Clé privée dérivée du mot de passe.
-
-    Returns:
-        bool: True si l'authentification réussit, False sinon.
+def load_private_key(username): 
     """
+    Loads the private key from the user's directory.
+    """
+    filepath = os.path.join(CLIENT_DIR, username, "private_key.txt") 
     try:
-        public_key, cert = load_user_certificate(username)
-
-        # Génération de la preuve Guillou-Quisquater
-
-
-        M, proof, challenge = guillou_quisquater_generate_proof(public_key, private_key, cert)
-        print(f"Guillou-Quisquater - M: {M}, Proof: {proof}, Challenge: {challenge}")
-
-        left = pow(proof, public_key[0], public_key[1])
-        right = (M * pow(cert, challenge, public_key[1])) % public_key[1]
-        print(f"Verification - Left: {left}, Right: {right}")
-
-        # Vérification de la preuve
-        is_valid = guillou_quisquater_verify_proof(public_key, cert, M, proof, challenge)
-
-        if is_valid:
-            print(f"Authentification réussie pour l'utilisateur {username}.")
-        else:
-            print(f"Authentification échouée pour l'utilisateur {username}.")
-        return is_valid
-
-    except Exception as e:
-        print(f"Erreur lors de l'authentification de l'utilisateur {username} : {e}")
-        return False
+        with open(filepath, "r") as f:
+            n, d = map(int, f.read().strip().split(","))  # Read n and d as integers
+        return (n, d)
+    except FileNotFoundError:
+        print(f"Error: Private key file not found in {filepath}.")
+        return None
+    except ValueError:
+        print("Error: Invalid private key format.")
+        return None
 
 def upload_file(username, shared_key, file_path):
     """

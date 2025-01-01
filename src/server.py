@@ -26,7 +26,7 @@ def check_user_exists(username):
     user_file = os.path.join(USERS_DIR, f"{username}.txt")
     return os.path.exists(user_file)
 
-def handle_user_enrollment(username, public_key, cert, salt):
+def handle_user_enrollment(username, public_key):
     """
     Gère l'enrôlement d'un utilisateur :
     - Stocke la clé publique.
@@ -41,11 +41,29 @@ def handle_user_enrollment(username, public_key, cert, salt):
     """
     user_file = os.path.join(USERS_DIR, f"{username}.txt")
     with open(user_file, "w") as file:
-        file.write(f"{public_key[0]}\n{public_key[1]}\n{cert}\n{salt.hex()}")
+        file.write(f"{public_key[0]},\n{public_key[1]}")
 
     user_dir = os.path.join(REPERTOIRE_DIR, username)
     os.makedirs(user_dir, exist_ok=True)
     log_action(f"Utilisateur {username} enrôlé avec succès.")
+
+
+def load_public_key(username):
+    """
+    Loads the public key from the user's directory.
+    """
+    filepath = os.path.join(SERVER_DIR,"Users",f"{username}.txt")  # Build the complete path
+    try:
+        with open(filepath, "r") as f:
+            n, e = map(int, f.read().strip().split(","))  # Read n and e as integers
+        return (n, e)
+    except FileNotFoundError:
+        print("Error: Public key file not found.")
+        return None
+    except ValueError:
+        print("Error: Invalid public key format.")
+        return None
+
 
 def handle_file_upload(username, file_name, encrypted_data):
     """
