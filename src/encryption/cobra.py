@@ -6,6 +6,8 @@ from encryption.linearTransformation import *
 from outils.hashing import *
 
 def cobra_encode(file, key):
+    binary_string = ''.join(format(byte, '08b') for byte in file)  # Convertir chaque byte en bits
+
     hash = sha256(key.encode())
     #print(f"Hash du mdp : {hash}\n")
 
@@ -15,15 +17,19 @@ def cobra_encode(file, key):
     W = generate_tour_keys(K)
     #print(f"Liste des clés de tour: {W}\n")
 
-    binary_result_list = string_to_bits_separated(file)
+
+    binary_result_list = binary_to_list(binary_string)
     encrypted_message = xor_encrypt_decrypt(binary_result_list, key)
     substituted_blocks = substitute_with_sboxes(''.join(encrypted_message))
     encrypted_feistel = feistel(substituted_blocks, W)
     final_encrypted = encode_linear_transformation(encrypted_feistel)
 
-    return final_encrypted
+    binary_bytes = bytes(int(final_encrypted[i:i+8], 2) for i in range(0, len(final_encrypted), 8))
+
+    return binary_bytes
 
 def cobra_decode(encoded_file, key):
+    encoded_file = ''.join(format(byte, '08b') for byte in encoded_file)
     hash = sha256(key.encode())
     #print(f"Hash du mdp : {hash}\n")
 
@@ -39,4 +45,6 @@ def cobra_decode(encoded_file, key):
     binary_result_list = binary_to_list(decoded_binary_string)
     decrypted_message = xor_encrypt_decrypt(binary_result_list, key)
 
-    return ''.join(chr(int(bits, 2)) for bits in decrypted_message)
+    final_decrypted = ''.join(decrypted_message)
+    binary_bytes = bytes(int(final_decrypted[i:i+8], 2) for i in range(0, len(final_decrypted), 8))
+    return binary_bytes
