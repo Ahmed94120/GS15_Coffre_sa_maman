@@ -1,23 +1,22 @@
 import os
 from outils.prime import generate_prime, mod_inverse, is_prime
 
-def simple_hash_long(data, output_size=1024):
-    """Generates an extended hash by iterating hashing."""
-    hash_value = 0
-    result = ""
-    for i in range(output_size // 32):  # Generate enough blocks for the desired size
-        for char in data:
-            hash_value = (hash_value * 31 + ord(char) + i) % (2**32)
-        result += format(hash_value, "08x")  # 8-character hex representation
-    return int(result[:output_size // 4], 16)
+def sponge_hash(mot_de_passe, iterations=100):
+    """Implémente une fonction de hashage basée sur une fonction éponge avec plusieurs phases d'absorption et d'essorage."""
+    etat = 0
+    for _ in range(iterations):
+        for caractere in mot_de_passe:
+            etat = (etat * 31 + ord(caractere)) % (2**64)
+        mot_de_passe = str(etat) + mot_de_passe[::-1]  # Phase d'absorption
+    return etat
 
-def key_derivation(mdp, phi):
-    """Derives the private key component 'd' using the password and phi."""
-    d = simple_hash_long(mdp, output_size=1024) % phi
+def key_derivation(mot_de_passe, phi):
+    """Dérive la composante privée 'd' en utilisant une fonction éponge et phi."""
+    d = sponge_hash(mot_de_passe) % phi
     if d < 2:
         d += 2
 
-    # Ensure 'd' is co-prime with phi and is prime
+    # Vérifie que 'd' est premier et copremier avec phi
     while True:
         if is_prime(d) and phi % d != 0:
             break
@@ -41,4 +40,4 @@ def rsa_key_derivaded(mdp):
     except ValueError:
         raise ValueError("Failed to calculate modular inverse. 'e' and 'phi' might not be co-prime.")
 
-    return (n, e), (n, d)
+    return (e, n), (d, n)

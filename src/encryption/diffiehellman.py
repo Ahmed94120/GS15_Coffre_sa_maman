@@ -30,6 +30,8 @@ def diffiehellman(public_key, private_key, p):
 
 
 
+
+
 '''
 from outils.prime import generate_prime
 import random

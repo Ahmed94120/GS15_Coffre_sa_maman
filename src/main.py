@@ -1,5 +1,4 @@
 from encryption.diffiehellman import parametres_globaux, private_key, mod_exp, diffiehellman
-from encryption.cobra import cobra_encode, cobra_decode
 from server import *
 from client import *
 from encryption.rsa import rsa_key_derivaded
@@ -22,6 +21,7 @@ def handle_diffie_hellman():
     shared_key_server = str(diffiehellman(public_key_client, private_key_server, p))
     shared_key_client = str(diffiehellman(public_key_server, private_key_client, p))
 
+    print()
     assert shared_key_server == shared_key_client, "Erreur : Les clés partagées ne correspondent pas !"
     print(f"Clé partagée générée avec succès : {shared_key_client}")
     return shared_key_client
@@ -58,8 +58,8 @@ def handle_file_operations(username, shared_key):
 if __name__ == "__main__":
     try:
         initialize_server()
-        print("Bienvenue dans le système de coffre-fort sécurisé.")
-        choice = input("Souhaitez-vous créer un compte (1) ou vous authentifier (2) ? (1/2) : ")
+        print("\nBienvenue dans le système de coffre-fort sécurisé.")
+        choice = input("\n===Souhaitez-vous créer un compte (1) ou vous authentifier (2) ? (1/2) : ===")
 
         if choice == "1":
             # Enrôlement d'un nouvel utilisateur
@@ -87,8 +87,8 @@ if __name__ == "__main__":
                         connected = ZeroKnowledgeProof(load_public_key(username), load_private_key(username))
                         if connected:
                             print(f"Authentification réussie pour l'utilisateur {username}.")
-                            """shared_key = handle_diffie_hellman()
-                            handle_file_operations(username, shared_key)"""
+                            shared_key = handle_diffie_hellman()
+                            handle_file_operations(username, shared_key)
                         
                         else:
                             print("Authentification échouée. Accès refusé.")

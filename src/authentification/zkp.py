@@ -28,7 +28,7 @@ class ZeroKnowledgeProof:
 
     def prover_step(self):
         """Execute the prover logic."""
-        n_prover, _ = self.private_key
+        d, n_prover, = self.private_key
 
         # Step 1: Generate B and retrieve e from verifier
         B = generate_coprime(n_prover)
@@ -55,7 +55,7 @@ class ZeroKnowledgeProof:
 
     def verifier_step(self, step, T=None, t=None, J=None, e=None):
         """Execute the verifier logic."""
-        n_verifier, e_verifier = self.public_key
+        e_verifier, n_verifier, = self.public_key
 
         if step == "send_e":
             return e_verifier
