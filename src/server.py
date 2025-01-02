@@ -1,5 +1,8 @@
 import os
 from encryption.cobra import *
+from encryption.rsa import *
+
+
 SERVER_DIR = "./server"
 USERS_DIR = os.path.join(SERVER_DIR, "Users")
 REPERTOIRE_DIR = os.path.join(SERVER_DIR, "Repertoire")
@@ -64,7 +67,6 @@ def load_public_key(username):
         print("Error: Invalid public key format.")
         return None
 
-
 def handle_file_upload_server(username, file_name, encrypted_data, shared_key):
     """
     Permet à un utilisateur de déposer un fichier dans son répertoire côté serveur.
@@ -75,22 +77,31 @@ def handle_file_upload_server(username, file_name, encrypted_data, shared_key):
         encrypted_data (bytes): Données chiffrées à stocker.
         shared_key (str): Clé partagée pour le chiffrement COBRA.
     """
-
-
+    # Déchiffrer les données avec COBRA
     decrypted_data = cobra_decode(encrypted_data, shared_key)
-    print(decrypted_data)
-    print(type(decrypted_data))
+    print(f"Data decrypted with COBRA: {decrypted_data}")
+    
+    # Charger la clé publique RSA de l'utilisateur
+    public_key = load_public_key(username)
+    if public_key is None:
+        raise ValueError(f"Clé publique introuvable pour l'utilisateur {username}.")
+
+    # Chiffrer les données avec RSA
+    rsa_encrypted_data = rsa_encrypt(decrypted_data, public_key)
+    print(f"Data encrypted with RSA: {rsa_encrypted_data}")
+    
+    # Sauvegarder les données chiffrées RSA dans le répertoire utilisateur
     user_dir = os.path.join(REPERTOIRE_DIR, username)
     if not os.path.exists(user_dir):
         raise FileNotFoundError(f"Le répertoire de l'utilisateur {username} est introuvable.")
 
     file_path = os.path.join(user_dir, file_name)
     with open(file_path, "wb") as file:
-        file.write(decrypted_data)
+        file.write(rsa_encrypted_data)
 
-    log_action(f"Fichier '{file_name}' déposé par l'utilisateur {username}.")
+    log_action(f"Fichier '{file_name}' déposé par l'utilisateur {username}, chiffré avec RSA.")
 
-def handle_file_download(username, file_name):
+def handle_file_download_server(username, file_name, shared_key):
     """
     Permet à un utilisateur de consulter un fichier stocké sur le serveur.
 
@@ -110,8 +121,11 @@ def handle_file_download(username, file_name):
     with open(file_path, "rb") as file:
         data = file.read()
 
-    log_action(f"Fichier '{file_name}' consulté par l'utilisateur {username}.")
-    return data
+     # Chiffrement avec COBRA (clé partagée)
+    cobra_encrypted_data = cobra_encode(data, shared_key)
+
+    log_action(f"Fichier '{file_name}' transmis à {username}.")
+    return file_name, cobra_encrypted_data
 
 def list_user_files(username):
     """

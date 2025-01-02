@@ -50,7 +50,8 @@ def handle_file_operations(username, shared_key):
                 print(f"- {file}")
         elif choice == "3":
             file_name = input("Entrez le nom du fichier à télécharger : ")
-            download_file(username, shared_key, file_name)
+            encrypted_file_name, cobra_encrypted_data = handle_file_download_server(username, file_name, shared_key)
+            download_file(username, shared_key, encrypted_file_name, cobra_encrypted_data)
         elif choice == "4":
             print("Retour au menu principal.")
             break

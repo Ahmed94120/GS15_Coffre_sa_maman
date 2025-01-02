@@ -72,7 +72,7 @@ def upload_file_client_to_serv(username, shared_key, file_path):
     return encrypted_file_name, cobra_encrypted_data
     
 
-def download_file(username, shared_key, file_name):
+def download_file(username, shared_key, encrypted_file_name_by_cobra, cobra_encrypted_data):
     """
     Gère le téléchargement d'un fichier en le déchiffrant avec RSA puis COBRA.
 
@@ -81,22 +81,22 @@ def download_file(username, shared_key, file_name):
         shared_key (str): Clé partagée générée par Diffie-Hellman.
         file_name (str): Nom du fichier à télécharger.
     """
-    # Télécharger le fichier chiffré depuis le serveur
-    encrypted_data = handle_file_download(username, file_name)
-
+   
     # Charger la clé privée de l'utilisateur
     private_key = load_private_key(username)
-
-    # Déchiffrement avec RSA
-    rsa_decrypted_data = pow(int.from_bytes(encrypted_data, "big"), private_key[0], private_key[1])
+   
 
     # Déchiffrement avec COBRA (clé partagée)
-    cobra_decrypted_data = cobra_decode(rsa_decrypted_data.to_bytes((rsa_decrypted_data.bit_length() + 7) // 8, "big").decode(), shared_key)
+
+    rsa_encrypt_data = cobra_decode(cobra_encrypted_data, shared_key)
+    # Déchiffrement avec RSA
+    rsa_decrypted_data = rsa_decrypt(rsa_encrypt_data, private_key)
 
     # Sauvegarder le fichier dans le répertoire client
     client_user_dir = os.path.join(CLIENT_DIR, username, "Repertoire")
     os.makedirs(client_user_dir, exist_ok=True)
-    output_file_path = os.path.join(client_user_dir, file_name.replace(".enc", ""))
+    decrypted_file_name = encrypted_file_name_by_cobra.replace(".enc", "")
+    output_file_path = os.path.join(client_user_dir, decrypted_file_name)
     with open(output_file_path, "wb") as file:
-        file.write(cobra_decrypted_data.encode())
-    print(f"Fichier '{file_name}' téléchargé et déchiffré avec succès.")
+        file.write(rsa_decrypted_data)
+    print(f"Fichier '{decrypted_file_name}' téléchargé et déchiffré avec succès.")
