@@ -127,14 +127,47 @@ graph TD
     Chiffrement -->|HMAC pour intégrité| Stockage
     Echange
   end
-```
-
-subgraph Détails du Processus
-Authentification -->|Validation ZKP| Session
-Chiffrement -->|HMAC pour intégrité| Stockage
-Echange
-end
 
 ```
+
+#  Schéma de Fonctionnement
+
+```mermaid
+
+flowchart TD
+ subgraph subGraph0["Défis et Solutions"]
+        Z1["Optimisation de COBRA"]
+        Z2["Solution : S-Boxes dynamiques et compatibilité SERPENT"]
+        X1["Taille limitée des blocs pour RSA"]
+        X2["Solution : Découpage et gestion des blocs avec des fonctions natives pour le chiffrement RSA"]
+        Y1["Validation ZKP"]
+        Y2["Solution : Tests exhaustifs sur Guillou-Quisquater"]
+  end
+    A["Utilisateur"] -- Entrez l'identifiant et le mot de passe --> B["Authentification"]
+    B -- "Validation ZKP Guillou-Quisquater" --> C["Accès sécurisé au coffre"]
+    C --> D@{ label: "Menu d'options" }
+    D -- Upload de fichiers --> E@{ label: "Processus d'upload" }
+    D -- Téléchargement de fichiers --> F["Processus de téléchargement"]
+    D -- Liste des fichiers disponibles --> G["Affichage des fichiers"]
+    E --> H["Préparation des fichiers"]
+    H --> I["Chiffrement COBRA avec S-Boxes dynamiques"]
+    I --> J["Envoi au serveur"] & Z1
+    J --> K["Déchiffrement COBRA côté serveur"]
+    K --> L["Chiffrement RSA des blocs"]
+    L --> M["Stockage sécurisé dans le coffre"] & X1
+    F --> N["Récupération des fichiers depuis le coffre"]
+    N --> O["Chiffrement COBRA avec S-Boxes dynamiques"]
+    O --> P["Envoie côté client"]
+    P --> Q["Déchiffrement COBRA côté client"]
+    Q --> R["Déchiffrement RSA côté client"]
+    R --> S["Réassemblage des blocs"]
+    S --> T@{ label: "Restitution du fichier à l'utilisateur" }
+    Z1 --> Z2
+    X1 --> X2
+    Y1 --> Y2
+    B --> Y1
+    D@{ shape: rect}
+    E@{ shape: rect}
+    T@{ shape: rect}
 
 ```
