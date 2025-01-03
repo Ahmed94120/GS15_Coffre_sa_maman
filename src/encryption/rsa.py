@@ -1,6 +1,4 @@
-import os
 from outils.prime import generate_prime, mod_inverse, is_prime
-import libnum
 
 def sponge_hash(password, iterations=100):
     """Implements a hash function based on a sponge construction with multiple phases of absorption and squeezing."""
@@ -51,10 +49,17 @@ def rsa_encrypt(data, public_key):
     encrypted_data = bytearray()
 
     for i in range(0, len(data), block_size):
+        # Extract block of data
         block = data[i:i + block_size]
-        block_int = libnum.s2n(block)  # Convert to integer
-        encrypted_block = pow(block_int, e, n)  # RSA encryption
-        encrypted_block_bytes = libnum.n2s(encrypted_block)  # Convert back to bytes
+
+        # Convert block to an integer
+        block_int = int.from_bytes(block, byteorder='big')
+
+        # Encrypt the integer block using RSA
+        encrypted_block = pow(block_int, e, n)
+
+        # Convert the encrypted integer back to bytes
+        encrypted_block_bytes = encrypted_block.to_bytes((n.bit_length() + 7) // 8, byteorder='big')
 
         # Add the block size as a 2-byte prefix for each encrypted block
         block_size_bytes = len(encrypted_block_bytes).to_bytes(2, 'big')
@@ -70,15 +75,21 @@ def rsa_decrypt(data, private_key):
 
     while offset < len(data):
         # Read the size of the encrypted block
-        block_size = int.from_bytes(data[offset:offset + 2], 'big')
+        block_size = int.from_bytes(data[offset:offset + 2], byteorder='big')
         offset += 2
 
-        # Extract and decrypt the block
+        # Extract the encrypted block
         encrypted_block = data[offset:offset + block_size]
         offset += block_size
-        block_int = libnum.s2n(encrypted_block)  # Convert back to integer
-        decrypted_block_int = pow(block_int, d, n)  # RSA decryption
-        decrypted_block = libnum.n2s(decrypted_block_int)  # Convert to bytes
+
+        # Convert the encrypted block to an integer
+        block_int = int.from_bytes(encrypted_block, byteorder='big')
+
+        # Decrypt the integer block using RSA
+        decrypted_block_int = pow(block_int, d, n)
+
+        # Convert the decrypted integer back to bytes
+        decrypted_block = decrypted_block_int.to_bytes((n.bit_length() + 7) // 8, byteorder='big').lstrip(b'\x00')
 
         # Append the decrypted block to the output
         decrypted_data += decrypted_block
