@@ -27,3 +27,21 @@
 [2025-01-03 19:17:51] HMAC generated for file 'flag.txt.enc' for user Ahmed.
 [2025-01-03 19:17:51] File 'flag.txt.enc' encrypted with COBRA for user Ahmed.
 [2025-01-03 19:17:51] HMAC verification succeeded for file 'flag.txt.enc' uploaded by user Ahmed.
+[2025-01-03 19:19:05] Server directories initialized successfully.
+[2025-01-03 19:19:10] Checked existence of user Ahmed: Exists.
+[2025-01-03 19:19:10] Public key successfully loaded for user Ahmed.
+[2025-01-03 19:19:21] File 'Logo_original.png.enc' retrieved successfully for user Ahmed.
+[2025-01-03 19:19:21] HMAC generated for file 'Logo_original.png.enc' for user Ahmed.
+[2025-01-03 19:19:21] File 'Logo_original.png.enc' encrypted with COBRA for user Ahmed.
+[2025-01-03 19:19:22] HMAC verification succeeded for file 'Logo_original.png.enc' uploaded by user Ahmed.
+[2025-01-03 19:19:42] Server directories initialized successfully.
+[2025-01-03 19:19:44] Checked existence of user Ahlmed: Does not exist.
+[2025-01-03 19:19:47] Server directories initialized successfully.
+[2025-01-03 19:19:54] Server directories initialized successfully.
+[2025-01-03 19:19:56] Checked existence of user Ahmed: Exists.
+[2025-01-03 19:19:56] Public key successfully loaded for user Ahmed.
+[2025-01-03 19:19:58] User Ahmed accessed the file list: Logo_original.png.enc, flag.txt.enc.
+[2025-01-03 19:20:09] File 'Logo_original.png.enc' retrieved successfully for user Ahmed.
+[2025-01-03 19:20:09] HMAC generated for file 'Logo_original.png.enc' for user Ahmed.
+[2025-01-03 19:20:10] File 'Logo_original.png.enc' encrypted with COBRA for user Ahmed.
+[2025-01-03 19:20:10] HMAC verification succeeded for file 'Logo_original.png.enc' uploaded by user Ahmed.
