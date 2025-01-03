@@ -2,37 +2,58 @@
 
 Ce projet implémente un coffre-fort numérique en Python pour le stockage sécurisé de données sensibles. Il est développé dans le cadre du cours GS15 en cryptologie, avec des exigences strictes en matière de sécurité.
 
-## Fonctionnalités
+## Fonctionnalités Principales
 
-1. **Gestion des Utilisateurs**
-   - Création de comptes avec génération de clés publique/privée.
-   - Dérivation de clé sécurisée (KDF) basée sur un mot de passe.
-   
-2. **Authentification et Sécurisation des Accès**
-   - Authentification à divulgation nulle (Zero-Knowledge Proof) avec protocole de Schnoor ou de Guillou-Quisquater.
-   - Authentification bidirectionnelle.
+-  **Chiffrement et Déchiffrement** :
+   -  RSA (asymétrique) et COBRA (symétrique).
+-  **Authentification Sécurisée** :
+   -  Preuve à divulgation nulle via le protocole Guillou-Quisquater.
+-  **Échange de Clés** :
+   -  Sécurisation des sessions avec Diffie-Hellman.
+-  **Traçabilité** :
+   -  Journalisation des actions des utilisateurs.
 
-3. **Chiffrement Symétrique et Asymétrique**
-   - Chiffrement des fichiers avec l’algorithme COBRA, inspiré de Serpent.
-   - Chiffrement des échanges avec une clé de session sécurisée via Diffie-Hellman.
+## Algorithmes Implémentés
 
-4. **Audit et Traçabilité**
-   - Suivi d’audit pour journaliser les accès et les modifications.
+1. **RSA (Rivest-Shamir-Adleman)** :
 
-5. **Gestion des Fichiers et Accès**
-   - Stockage chiffré des fichiers, avec gestion des droits d’accès.
+   -  Gestion des clés via une fonction éponge personnalisée.
+   -  Gestion de blocs pour les fichiers volumineux.
 
-## Structure du Projet
+2. **COBRA** :
 
-### `src`
-Contient l’ensemble des modules Python pour le coffre-fort.
+   -  Inspiré de l'algorithme SERPENT, avec des améliorations pour la substitution et la diffusion.
 
-- **encryption** : Gestion des méthodes de chiffrement symétrique avec l'algorithme COBRA.
-- **authentication** : Implémentation des protocoles ZKP (Schnoor et Guillou-Quisquater) pour la vérification des utilisateurs.
-- **key_management** : Gestion de la génération et de la dérivation des clés.
-- **session_management** : Gestion de l’échange de clés Diffie-Hellman pour les sessions.
-- **storage** : Fonctions pour chiffrer et déchiffrer les fichiers stockés.
-- **utils** : Fonctions utilitaires (e.g., hashing, I/O).
+3. **ZKP Guillou-Quisquater** :
+
+   -  Protocole de preuve à divulgation nulle intégré pour l’authentification.
+
+4. **Diffie-Hellman** :
+
+   -  Partage sécurisé de clés sur des canaux non sécurisés.
+
+5. **HMAC** :
+   -  Vérification de l'intégrité des données échangées.
+
+## Défis et Solutions
+
+-  **Limitation des blocs RSA** :
+   -  Utilisation de `libnum` pour segmenter et réassembler les données.
+-  **Validation des Protocoles ZKP** :
+   -  Tests unitaires exhaustifs pour garantir l’intégrité des calculs modulaires.
+-  **Gestion des Blocs Non Alignés (COBRA)** :
+   -  Implémentation d’un mécanisme de padding codé en longueur.
+
+## Architecture Générale
+
+1. **Enrôlement des Utilisateurs** :
+   -  Création de répertoires utilisateurs et génération de clés RSA.
+2. **Chiffrement des Fichiers** :
+   -  RSA pour les petites données, COBRA pour les fichiers volumineux.
+3. **Authentification** :
+   -  Validation de l'identité utilisateur via ZKP.
+4. **Échange de Clés** :
+   -  Utilisation de Diffie-Hellman pour sécuriser les communications.
 
 ### Processus d'Utilisation
 
@@ -81,52 +102,29 @@ Utilisateur                                         Coffre-Fort / Serveur
    │  - Dépôt ou consultation de fichiers                   │
    │  - Les fichiers sont chiffrés avec l'algorithme COBRA  │
    │    (chiffrement symétrique)                            │
-   │  - Utilisation d'un hash MAC pour authentifier         │
-   │    chaque échange                                      │
+   │  - Utilisation d'un hash MAC pour vérifier l'intégrité │
    │  - Les fichiers sont chiffrés pour stockage avec       │
-   │    la clé privée de l'utilisateur (chiffrement RSA)    │
+   │    la clé publique de l'utilisateur (chiffrement RSA)  │
    │<───────────────────────────────────────────────────────│
 ```
 
 # Processus d'Utilisation du Coffre-Fort Numérique
 
 ```mermaid
-flowchart TD
+graph TD
+  Start[Début] --> Enrollement[Enrôlement des utilisateurs]
+  Enrollement -->|Génération de clés pub/priv| Authentification[Authentification utilisateur]
+  Authentification -->|ZKP Guillou-Quisquater| Session[Établissement de la session sécurisée]
+  Session -->|Échange de clés| Chiffrement[Gestion des fichiers]
+  Chiffrement -->|Chiffrement COBRA| Echange[Echange Serveur/Client]
+  Chiffrement -->|Deconnexion| Fin[Fin du programme]
+  Echange-->|Chiffrement RSA| Stockage[Stockage sécurisé]
+  Stockage --> Journalisation[Journalisation des actions]
+  Journalisation --> Chiffrement
 
-    %% Enrôlement
-    A[Début] --> B[Enrôlement]
-    B --> C1[Création d'un compte - create_account username]
-    C1 --> C2[Génération d'un répertoire utilisateur - create_user_directory username]
-    C2 --> C3[Génération d'une paire de clés RSA - generate_rsa_keypair bits]
-    C3 --> C4[Stockage de la clé publique en clair - save_public_key username public_key]
-
-    %% Dérivation de la clé (KDF)
-    C4 --> D[Dérivation de la Clé KDF]
-    D --> D1[Entrée d'un mot de passe par l'utilisateur]
-    D1 --> D2[Dérivation de la clé privée avec un KDF - kdf password salt iterations]
-    D2 --> D3[Génération d'un sel pour la clé privée - generate_salt]
-    D3 --> D4[Stockage de la clé privée dérivée et du sel - save_private_key username private_key salt]
-
-    %% Authentification à double sens
-    D4 --> E[Authentification à Double Sens]
-    E --> E1[Demande de certificat au coffre-fort - request_certificate]
-    E1 --> E2[Vérification du certificat avec l'Autorité de Certification - verify_certificate]
-    E2 --> E3[Preuve de connaissance de la clé privée - zkp_proof_of_knowledge username]
-    E3 --> E4[Authentification réussie]
-
-    %% Échange de clés
-    E4 --> F[Échange de Clés]
-    F --> F1[Échange d'une clé de session via Diffie-Hellman - diffie_hellman_exchange]
-    F1 --> F2[Création d'une clé temporaire pour les échanges]
-
-    %% Dépôt/Consultation de fichiers
-    F2 --> G[Dépôt/Consultation de Fichiers]
-    G --> G1[Dépôt ou consultation des fichiers - access_file username file_name]
-    G1 --> G2[Chiffrement des fichiers avec COBRA - cobra_encrypt file_content session_key]
-    G2 --> G3[Authentification de chaque échange avec un HMAC - hmac_authenticate session_key message]
-    G3 --> G4[Chiffrement des fichiers pour le stockage avec RSA - rsa_encrypt file_content private_key]
-
-    %% Fin du processus
-    G4 --> H[Fin]
-
-
+  subgraph Détails du Processus
+    Authentification -->|Validation ZKP| Session
+    Chiffrement -->|HMAC pour intégrité| Stockage
+    Echange
+  end
+```

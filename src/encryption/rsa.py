@@ -2,96 +2,85 @@ import os
 from outils.prime import generate_prime, mod_inverse, is_prime
 import libnum
 
-def sponge_hash(mot_de_passe, iterations=100):
-    """Implémente une fonction de hashage basée sur une fonction éponge avec plusieurs phases d'absorption et d'essorage."""
-    etat = 0
+def sponge_hash(password, iterations=100):
+    """Implements a hash function based on a sponge construction with multiple phases of absorption and squeezing."""
+    state = 0
     for _ in range(iterations):
-        for caractere in mot_de_passe:
-            etat = (etat * 31 + ord(caractere)) % (2**64)
-        mot_de_passe = str(etat) + mot_de_passe[::-1]  # Phase d'absorption
-    return etat
+        for char in password:
+            state = (state * 31 + ord(char)) % (2**64)
+        password = str(state) + password[::-1]  # Absorption phase
+    return state
 
-def key_derivation(mot_de_passe, phi):
-    """Dérive la composante privée 'd' en utilisant une fonction éponge et phi."""
-    d = sponge_hash(mot_de_passe) % phi
+def key_derivation(password, phi):
+    """Derives the private key component 'd' using a sponge function and phi."""
+    d = sponge_hash(password) % phi
     if d < 2:
         d += 2
 
-    # Vérifie que 'd' est premier et copremier avec phi
+    # Ensures 'd' is prime and coprime with phi
     while True:
         if is_prime(d) and phi % d != 0:
             break
         d += 1
     return d
 
-def rsa_key_derivaded(mdp):
+def rsa_key_derivaded(password):
     """Generates RSA keys using a password."""
     # Step 1: Generate two large primes
-    p = generate_prime(1024)
-    q = generate_prime(1024)
+    p = generate_prime(2048 // 2)  # Use 2048-bit keys for increased block size
+    q = generate_prime(2048 // 2)
 
     # Step 2: Compute n and phi(n)
     n = p * q
     phi = (p - 1) * (q - 1)
 
-    # Step 3: Derive d and compute e
-    e = 65537  # Standard public exponent
-    try:
-        d = mod_inverse(e, phi)
-    except ValueError:
-        raise ValueError("Failed to calculate modular inverse. 'e' and 'phi' might not be co-prime.")
+    # Step 3: Derive d using the password and compute e
+    d = key_derivation(password, phi)
+    e = mod_inverse(d, phi)
+
+    if e is None:
+        raise ValueError("Failed to calculate modular inverse. 'd' and 'phi' might not be co-prime.")
 
     return (e, n), (d, n)
 
+
 def rsa_encrypt(data, public_key):
-    """
-    Encrypts data using RSA and a given public key.
-    
-    Args:
-        data (bytes): The plaintext data to encrypt.
-        public_key (tuple): A tuple (e, n) representing the RSA public key.
-
-    Returns:
-        bytes: The encrypted data.
-    """
+    """Encrypt binary data using RSA."""
     e, n = public_key
-    
-    # Convert the data to an integer using libnum
-    plaintext_int = libnum.s2n(data)
-    
-    # Ensure the plaintext is less than n
-    if plaintext_int >= n:
-        raise ValueError("Plaintext is too large for the RSA modulus.")
+    block_size = (n.bit_length() // 8) - 11  # Allow room for padding or metadata
+    encrypted_data = bytearray()
 
-    # Perform RSA encryption
-    ciphertext_int = pow(plaintext_int, e, n)
-    
-    # Convert the encrypted integer back to bytes using libnum
-    encrypted_data = libnum.n2s(ciphertext_int)
-    
-    return encrypted_data
+    for i in range(0, len(data), block_size):
+        block = data[i:i + block_size]
+        block_int = libnum.s2n(block)  # Convert to integer
+        encrypted_block = pow(block_int, e, n)  # RSA encryption
+        encrypted_block_bytes = libnum.n2s(encrypted_block)  # Convert back to bytes
 
-def rsa_decrypt(ciphertext, private_key):
-    """
-    Decrypts ciphertext using RSA and removes residual null characters.
+        # Add the block size as a 2-byte prefix for each encrypted block
+        block_size_bytes = len(encrypted_block_bytes).to_bytes(2, 'big')
+        encrypted_data += block_size_bytes + encrypted_block_bytes
 
-    Args:
-        ciphertext (bytes): The encrypted data.
-        private_key (tuple): A tuple (d, n) representing the RSA private key.
+    return bytes(encrypted_data)
 
-    Returns:
-        bytes: The decrypted plaintext as a clean string.
-    """
+def rsa_decrypt(data, private_key):
+    """Decrypt RSA-encrypted data."""
     d, n = private_key
+    offset = 0
+    decrypted_data = bytearray()
 
-    # Convert the ciphertext from bytes to an integer using libnum
-    ciphertext_int = libnum.s2n(ciphertext)
+    while offset < len(data):
+        # Read the size of the encrypted block
+        block_size = int.from_bytes(data[offset:offset + 2], 'big')
+        offset += 2
 
-    # Perform RSA decryption
-    plaintext_int = pow(ciphertext_int, d, n)
+        # Extract and decrypt the block
+        encrypted_block = data[offset:offset + block_size]
+        offset += block_size
+        block_int = libnum.s2n(encrypted_block)  # Convert back to integer
+        decrypted_block_int = pow(block_int, d, n)  # RSA decryption
+        decrypted_block = libnum.n2s(decrypted_block_int)  # Convert to bytes
 
-    # Convert the decrypted integer back to bytes using libnum
-    plaintext_data = libnum.n2s(plaintext_int)
+        # Append the decrypted block to the output
+        decrypted_data += decrypted_block
 
-    # Return the plaintext without modifying null bytes
-    return plaintext_data
+    return bytes(decrypted_data)
