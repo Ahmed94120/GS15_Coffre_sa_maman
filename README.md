@@ -1,7 +1,5 @@
 # GS15_Coffre_sa_maman A24
 
-# GS15_Coffre_sa_maman A24
-
 Ce projet implémente un coffre-fort numérique en Python pour le stockage sécurisé de données sensibles. Il est développé dans le cadre du cours GS15 en cryptologie, avec des exigences strictes en matière de sécurité.
 
 ## Fonctionnalités Principales
