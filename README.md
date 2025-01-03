@@ -128,3 +128,13 @@ graph TD
     Echange
   end
 ```
+
+subgraph Détails du Processus
+Authentification -->|Validation ZKP| Session
+Chiffrement -->|HMAC pour intégrité| Stockage
+Echange
+end
+
+```
+
+```
