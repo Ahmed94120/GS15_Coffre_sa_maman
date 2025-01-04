@@ -2,7 +2,7 @@ from server import *
 from encryption.cobra import cobra_encode, cobra_decode
 import os
 from encryption.hmac import *
-
+from authentification.google_auth import *
 CLIENT_DIR = "./client"
 
 def initialize_client(username, public_key, private_key):
@@ -127,3 +127,21 @@ def download_file(username, shared_key, encrypted_file_name_by_cobra, cobra_encr
         file.write(rsa_decrypted_data)
 
     print(f"File '{decrypted_file_name}' successfully downloaded and decrypted.")
+
+
+def handle_user_authentication(username):
+    """
+    Authenticates the user using Google Authenticator.
+    """
+    # Load the secret securely (e.g., decrypt with private key)
+    secret = load_google_authenticator_secret(username)
+
+    # Prompt for the TOTP code
+    user_code = input("Enter your Google Authenticator code: ")
+
+    if verify_google_authenticator_code(secret, user_code):
+        print("Authentication successful.")
+        return True
+    else:
+        print("Authentication failed. Invalid code.")
+        return False

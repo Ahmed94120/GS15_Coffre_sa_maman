@@ -59,7 +59,7 @@ def rsa_encrypt(data, public_key):
         encrypted_block = pow(block_int, e, n)
 
         # Convert the encrypted integer back to bytes
-        encrypted_block_bytes = encrypted_block.to_bytes((n.bit_length() + 7) // 8, byteorder='big')
+        encrypted_block_bytes = encrypted_block.to_bytes((n.bit_length() + 7) // 8, byteorder='big').lstrip(b'\x00')
 
         # Add the block size as a 2-byte prefix for each encrypted block
         block_size_bytes = len(encrypted_block_bytes).to_bytes(2, 'big')

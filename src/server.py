@@ -2,6 +2,7 @@ import os
 from encryption.cobra import *
 from encryption.rsa import *
 from encryption.hmac import *
+from authentification.google_auth import *
 
 
 SERVER_DIR = "./server"
@@ -47,10 +48,60 @@ def handle_user_enrollment(username, public_key):
     user_file = os.path.join(USERS_DIR, f"{username}.txt")
     with open(user_file, "w") as file:
         file.write(f"{public_key[0]},\n{public_key[1]}")
-
+    
     user_dir = os.path.join(REPERTOIRE_DIR, username)
     os.makedirs(user_dir, exist_ok=True)
     log_action(f"User {username} successfully enrolled with public key.")
+
+    secret = generate_google_authenticator_secret()
+    
+    # Generate a QR code for Google Authenticator
+    generate_google_authenticator_qr(username, secret)
+    # Save the secret securely (e.g., encrypt with public key)
+    save_google_authenticator_secret(username, secret)
+
+
+def save_google_authenticator_secret(username, secret):
+    """
+    Save the Google Authenticator secret securely for a given user.
+    """
+
+    # Save the encrypted secret to a file
+
+    secret_file_path = os.path.join(USERS_DIR, f"{username}_ga_secret.txt")
+    with open(secret_file_path, "w") as f:
+        f.write(secret)
+
+def load_google_authenticator_secret(username):
+    """
+    Loads the Google Authenticator secret for the specified user.
+    The secret is stored in an encrypted file and is decrypted using the RSA private key.
+
+    Args:
+        username (str): The username for whom the secret is being retrieved.
+        private_key (tuple): The RSA private key (d, n).
+
+    Returns:
+        str: The decrypted Google Authenticator secret, or None if the secret file is missing or decryption fails.
+    """
+    
+    secret_file = os.path.join(USERS_DIR, f"{username}_ga_secret.txt")
+
+    if not os.path.exists(secret_file):
+        print(f"[ERROR] Encrypted Google Authenticator secret not found for user: {username}.")
+        return None
+
+    try:
+        # Read the encrypted secret from the file
+        with open(secret_file, "r") as f:
+            secret = f.read()
+
+        # Decode the bytes back into a string
+        return secret
+
+    except Exception as e:
+        print(f"[ERROR] Failed to load or decrypt Google Authenticator secret for {username}: {e}")
+        return None
 
 def load_public_key(username):
     """Load the public key from the user's directory."""

@@ -3,6 +3,8 @@ from server import *
 from client import *
 from encryption.rsa import rsa_key_derivaded
 from authentification.zkp import ZeroKnowledgeProof
+import pyotp
+import qrcode
 
 def handle_diffie_hellman():
     """
@@ -88,9 +90,10 @@ if __name__ == "__main__":
             password = input("Enter a password: ")
             public_key, private_key = rsa_key_derivaded(password)
             
+            
             # Initialize client directory and save keys
             initialize_client(username, public_key, private_key)
-            
+
             # Save user information on the server
             handle_user_enrollment(username, public_key)
             print(f"User {username} successfully enrolled.")
@@ -106,9 +109,22 @@ if __name__ == "__main__":
             # Perform Zero Knowledge Proof for authentication
             connected = ZeroKnowledgeProof(load_public_key(username), load_private_key(username))
             if connected:
-                print(f"Authentication successful for user {username}.")
-                shared_key = handle_diffie_hellman()
-                handle_file_operations(username, shared_key)
+                print("Authentication 1/2 (ZKP) successful.")
+                # Google Authenticator validation
+                secret = load_google_authenticator_secret(username)
+                
+                if secret is None:
+                    print("[ERROR] Unable to load Google Authenticator secret.")
+                    raise ValueError("Google Authenticator secret not found.")
+                user_code = input("Enter the code from your Google Authenticator app: ")
+                if verify_google_authenticator_code(secret, user_code):
+                    print("Authentication 2/2 (Google Authenticator) successful.")
+                    log_action(f"User {username} successfully authenticated.")
+                    shared_key = handle_diffie_hellman()
+                    handle_file_operations(username, shared_key)
+
+                else:
+                    print("[ERROR] Google Authenticator verification failed.")
             else:
                 print("Authentication failed. Access denied.")
 
